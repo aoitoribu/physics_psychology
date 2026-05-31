@@ -1,0 +1,11 @@
+{
+  "name": "physics-psychology-game",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "serve": "node scripts/serve.mjs",
+    "check": "node --check src/app.js && node --check src/questions.js && node --check scripts/serve.mjs"
+  }
+}

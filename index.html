@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>逃离期末周｜心理班会互动游戏</title>
+  <link rel="stylesheet" href="./src/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>逃离期末周</h1>
+    <div class="subtitle">心理班会分组决策游戏｜有限体力、有限心态、有限 GPA，但 ddl 无限</div>
+  </header>
+
+  <main>
+    <section id="setup" class="card">
+      <h2>游戏设置</h2>
+      <p class="small" id="setupIntro"></p>
+      <div class="row">
+        <label for="teamCount">组数：</label>
+        <input id="teamCount" type="number" min="2" max="12" value="6" />
+        <label>每组初始值：</label>
+        <span class="pill" id="initialStamina"></span>
+        <span class="pill" id="initialMood"></span>
+        <span class="pill" id="initialGpa"></span>
+        <button id="startBtn" type="button">开始游戏</button>
+      </div>
+    </section>
+
+    <section id="game" class="hidden">
+      <div class="card">
+        <div class="statusbar">
+          <div>
+            <b id="roundInfo">第 1 轮 / 共 6 轮</b>
+            <span class="muted" id="turnInfo"></span>
+          </div>
+          <div class="progress"><div id="progressBar"></div></div>
+          <button class="secondary" id="resetBtn" type="button">重新开始</button>
+        </div>
+      </div>
+
+      <section class="two-col">
+        <div class="card">
+          <div class="question-title" id="questionTitle"></div>
+          <div class="question-text" id="questionText"></div>
+          <div class="small" id="followTip"></div>
+          <div id="options" class="options"></div>
+          <div class="row option-actions">
+            <button id="confirmBtn" type="button" disabled>确认本组选择</button>
+            <button class="secondary" id="randomBtn" type="button">随机选择</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>当前各组状态</h2>
+          <div id="teams" class="grid"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>游戏记录</h2>
+        <div id="log" class="log"></div>
+      </section>
+    </section>
+
+    <section id="result" class="card hidden">
+      <h2>最终结果</h2>
+      <p class="small" id="scoreRule"></p>
+      <div id="resultTable"></div>
+      <div class="card reflection">
+        <h3>班会收束提示</h3>
+        <p id="reflectionText"></p>
+      </div>
+      <button id="againBtn" type="button">再玩一次</button>
+    </section>
+  </main>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
