@@ -92,6 +92,19 @@ select{
   min-width:150px;
 }
 
+.check-field{
+  display:inline-flex;
+  gap:6px;
+  align-items:center;
+  color:var(--text);
+  font-size:14px;
+}
+
+.check-field input{
+  width:16px;
+  height:16px;
+}
+
 button{
   border:0;
   border-radius:14px;
@@ -200,6 +213,11 @@ button:disabled{
 .team.active{
   border-color:#818cf8;
   box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+
+.team.in-batch:not(.active){
+  border-color:#c7d2fe;
+  background:#fbfdff;
 }
 
 .team.skip{
@@ -409,6 +427,22 @@ tr:last-child td{border-bottom:0}
 }
 
 .option-actions{margin-top:10px}
+
+.timer-line{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.timer-line button{
+  padding:7px 12px;
+  border-radius:10px;
+  font-size:13px;
+}
 
 .countdown-track{
   width:100%;

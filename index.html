@@ -24,7 +24,7 @@
         <div class="setup-panel active" id="competitionPanel">
           <div class="row setup-row">
             <label for="teamCount">组数：</label>
-            <input id="teamCount" type="number" min="2" max="12" value="6" />
+            <input id="teamCount" type="number" min="2" max="20" value="15" />
             <label>每组初始值：</label>
             <label class="field-compact" for="initialStaminaInput">体力</label>
             <input id="initialStaminaInput" type="number" min="-20" max="30" value="10" />
@@ -32,6 +32,10 @@
             <input id="initialMoodInput" type="number" min="-20" max="30" value="10" />
             <label class="field-compact" for="initialGpaInput">GPA</label>
             <input id="initialGpaInput" type="number" min="-20" max="30" value="10" />
+            <label class="check-field" for="hideScoreHintsInput">
+              <input id="hideScoreHintsInput" type="checkbox" />
+              隐藏分值提示
+            </label>
             <button id="startBtn" type="button">开始游戏</button>
           </div>
         </div>
@@ -60,8 +64,12 @@
           <div class="countdown-track" id="countdownTrack" aria-hidden="true">
             <div id="countdownBar"></div>
           </div>
+          <div class="timer-line">
+            <span id="timerLabel">倒计时 00:00</span>
+            <button class="secondary" id="pauseBtn" type="button">暂停</button>
+          </div>
           <div class="row option-actions">
-            <button id="confirmBtn" type="button" disabled>确认本组选择</button>
+            <button id="confirmBtn" type="button" disabled>记录本组选择</button>
             <button class="secondary" id="randomBtn" type="button">随机选择</button>
           </div>
         </div>

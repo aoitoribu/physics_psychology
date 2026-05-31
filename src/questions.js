@@ -9,11 +9,14 @@ export const GAME_CONFIG = {
     mood: 1.3,
     gpa: 1.2
   },
-  restRoundsWhenStaminaEmpty: 2,
-  duplicateChoicePenalty: {
-    mood: -1,
-    gpa: -1
+  batchSize: 5,
+  probability: {
+    baseRate: 90,
+    perSameChoicePenalty: 10,
+    minRate: 35,
+    maxRate: 95
   },
+  failedPositiveMultiplier: 0.4,
   difficulties: {
     easy: {
       label: "轻松闯关",
@@ -32,9 +35,9 @@ export const GAME_CONFIG = {
     }
   },
   setupIntro:
-    "竞赛模式建议 4-8 组游玩；闯关模式适合单组体验。若体力值 <= 0，将进入“强制休息”，停止决策 2 轮。",
+    "竞赛模式支持 2-20 组，系统按每 5 组一批推进。体力或心情任一 <= 0 会强制跳过 1 轮；两项都 <= 0 会跳过 2 轮，恢复后归 1 再继续。",
   followTip:
-    "规则：同一轮里，同一个选项每多一个队伍选择，所有选择该项的队伍都会共同叠加一次跟风折损。",
+    "规则：每轮按随机批次推进；只有前面批次已选过的相同选项会降低后续成功率。同一批内部先记录选择，再统一结算，互不影响。",
   reflection:
     "可以引导同学思考：在游戏里，很多选择都不是“绝对正确”或“绝对错误”，而是在有限体力、情绪和学业要求之间做取舍。期末压力下真正重要的，不只是把任务完成，也包括意识到自己的资源有限，并学会求助、协作和保留恢复空间。"
 };
