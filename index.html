@@ -16,50 +16,78 @@
     <section id="setup" class="card">
       <h2>游戏设置</h2>
       <p class="small" id="setupIntro"></p>
-      <div class="row">
-        <label for="teamCount">组数：</label>
-        <input id="teamCount" type="number" min="2" max="12" value="6" />
-        <label>每组初始值：</label>
-        <span class="pill" id="initialStamina"></span>
-        <span class="pill" id="initialMood"></span>
-        <span class="pill" id="initialGpa"></span>
-        <button id="startBtn" type="button">开始游戏</button>
+      <div class="mode-switch" role="radiogroup" aria-label="游戏模式">
+        <button class="mode-option active" type="button" data-mode="competition">竞赛模式</button>
+        <button class="mode-option" type="button" data-mode="challenge">闯关模式</button>
+      </div>
+      <div class="setup-panels">
+        <div class="setup-panel active" id="competitionPanel">
+          <div class="row setup-row">
+            <label for="teamCount">组数：</label>
+            <input id="teamCount" type="number" min="2" max="12" value="6" />
+            <label>每组初始值：</label>
+            <label class="field-compact" for="initialStaminaInput">体力</label>
+            <input id="initialStaminaInput" type="number" min="-20" max="30" value="10" />
+            <label class="field-compact" for="initialMoodInput">心情</label>
+            <input id="initialMoodInput" type="number" min="-20" max="30" value="10" />
+            <label class="field-compact" for="initialGpaInput">GPA</label>
+            <input id="initialGpaInput" type="number" min="-20" max="30" value="10" />
+            <button id="startBtn" type="button">开始游戏</button>
+          </div>
+        </div>
+        <div class="setup-panel" id="challengePanel">
+          <div class="row setup-row">
+            <label for="difficultySelect">难度：</label>
+            <select id="difficultySelect">
+              <option value="easy">轻松闯关</option>
+              <option value="normal" selected>标准期末</option>
+              <option value="hard">高压挑战</option>
+            </select>
+            <span class="pill" id="difficultyHint"></span>
+            <button id="challengeStartBtn" type="button">开始闯关</button>
+          </div>
+        </div>
       </div>
     </section>
 
     <section id="game" class="hidden">
-      <div class="card">
-        <div class="statusbar">
-          <div>
-            <b id="roundInfo">第 1 轮 / 共 6 轮</b>
-            <span class="muted" id="turnInfo"></span>
-          </div>
-          <div class="progress"><div id="progressBar"></div></div>
-          <button class="secondary" id="resetBtn" type="button">重新开始</button>
-        </div>
-      </div>
-
-      <section class="two-col">
-        <div class="card">
+      <section class="play-layout">
+        <div class="card question-card">
           <div class="question-title" id="questionTitle"></div>
           <div class="question-text" id="questionText"></div>
           <div class="small" id="followTip"></div>
           <div id="options" class="options"></div>
+          <div class="countdown-track" id="countdownTrack" aria-hidden="true">
+            <div id="countdownBar"></div>
+          </div>
           <div class="row option-actions">
             <button id="confirmBtn" type="button" disabled>确认本组选择</button>
             <button class="secondary" id="randomBtn" type="button">随机选择</button>
           </div>
         </div>
 
-        <div class="card">
-          <h2>当前各组状态</h2>
-          <div id="teams" class="grid"></div>
-        </div>
-      </section>
+        <aside class="side-panel">
+          <div class="card status-card">
+            <div class="statusbar">
+              <div>
+                <b id="roundInfo">第 1 轮 / 共 6 轮</b>
+                <span class="muted" id="turnInfo"></span>
+              </div>
+              <div class="progress"><div id="progressBar"></div></div>
+              <button class="secondary" id="resetBtn" type="button">重新开始</button>
+            </div>
+          </div>
 
-      <section class="card">
-        <h2>游戏记录</h2>
-        <div id="log" class="log"></div>
+          <div class="card team-card">
+            <h2 id="teamTitle">当前各组状态</h2>
+            <div id="teams" class="grid"></div>
+          </div>
+
+          <section class="card log-card">
+            <h2>游戏记录</h2>
+            <div id="log" class="log"></div>
+          </section>
+        </aside>
       </section>
     </section>
 
