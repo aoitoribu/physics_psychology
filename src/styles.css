@@ -472,12 +472,16 @@ tr:last-child td{border-bottom:0}
   left:14px;
   bottom:14px;
   z-index:12;
-  display:grid;
-  gap:8px;
-  justify-items:start;
+  width:0;
+  height:0;
+  pointer-events:none;
 }
 
 .music-toggle{
+  position:absolute;
+  left:0;
+  bottom:0;
+  pointer-events:auto;
   width:42px;
   height:42px;
   display:grid;
@@ -490,13 +494,27 @@ tr:last-child td{border-bottom:0}
   color:#fff;
   border:1px solid rgba(255,255,255,.25);
   box-shadow:0 12px 28px rgba(15,23,42,.22);
+  opacity:.56;
+  transform:translateX(-28px);
+  transition:opacity .18s ease, transform .18s ease, background .15s ease;
 }
 
 .music-toggle:hover{
   background:#1f2937;
+  transform:translateX(0);
+  opacity:1;
+}
+
+.music-widget:hover .music-toggle,
+.music-widget.open .music-toggle{
+  transform:translateX(0);
+  opacity:1;
 }
 
 .music-panel{
+  position:absolute;
+  left:0;
+  bottom:52px;
   width:min(340px,calc(100vw - 28px));
   max-height:min(560px,calc(100dvh - 78px));
   overflow:hidden;
@@ -506,16 +524,19 @@ tr:last-child td{border-bottom:0}
   background:rgba(255,255,255,.96);
   box-shadow:0 18px 40px rgba(15,23,42,.18);
   opacity:0;
+  visibility:hidden;
   pointer-events:none;
   transform:translateY(8px) scale(.98);
   transform-origin:bottom left;
-  transition:opacity .16s ease, transform .16s ease;
+  transition:opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
 }
 
 .music-widget.open .music-panel{
   opacity:1;
+  visibility:visible;
   pointer-events:auto;
   transform:translateY(0) scale(1);
+  transition:opacity .16s ease, transform .16s ease, visibility 0s;
 }
 
 .music-panel-head{
