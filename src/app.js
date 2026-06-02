@@ -1,4 +1,5 @@
 import { GAME_CONFIG, QUESTIONS } from "./questions.js";
+import { CHALLENGE_CONFIG, CHALLENGE_QUESTIONS } from "./challengeQuestions.js";
 
 const MAX_STAT = 30;
 const MIN_STAT = -20;
@@ -26,6 +27,9 @@ const state = {
   currentRoundSettledPicks: {},
   currentBatchRecords: [],
   hideScoreHints: false,
+  difficulty: "normal",
+  challengeEndedEarly: false,
+  challengeEndReason: "",
   logLines: []
 };
 
@@ -83,7 +87,7 @@ els.difficultySelect.addEventListener("change", renderDifficultyHint);
 initStaticText();
 
 function initStaticText(){
-  els.setupIntro.textContent = GAME_CONFIG.setupIntro;
+  renderSetupIntro();
   els.scoreRule.textContent = scoreRuleText();
   els.reflectionText.textContent = GAME_CONFIG.reflection;
   renderDifficultyHint();
@@ -92,6 +96,10 @@ function initStaticText(){
 function initGame(){
   const initial = currentInitialStats();
   const count = state.mode === "competition" ? clampNumber(Number(els.teamCount.value || 15), 2, 20) : 1;
+  const questions = activeQuestions();
+  state.difficulty = els.difficultySelect.value || "normal";
+  state.challengeEndedEarly = false;
+  state.challengeEndReason = "";
   state.teams = Array.from({ length: count }, (_, i) => ({
     name: state.mode === "competition" ? `第 ${i + 1} 组` : "当前状态",
     stamina: initial.stamina,
@@ -102,10 +110,10 @@ function initGame(){
     decisions: []
   }));
   state.batches = createBatches(count, GAME_CONFIG.batchSize || 5);
-  state.roundBatchOrders = createRoundBatchOrders(state.batches.length, QUESTIONS.length);
+  state.roundBatchOrders = state.mode === "competition" ? createRoundBatchOrders(state.batches.length, questions.length) : [];
   state.roundIndex = 0;
   state.selected = null;
-  state.hideScoreHints = Boolean(els.hideScoreHintsInput?.checked);
+  state.hideScoreHints = shouldHideScoreHints();
   state.logLines = [];
 
   els.setup.classList.add("hidden");
@@ -115,7 +123,7 @@ function initGame(){
   document.body.classList.remove("is-result");
 
   addLog(`${state.mode === "competition" ? "竞赛模式" : "闯关模式"}开始：欢迎进入期末周。`);
-  startRound();
+  if(state.mode === "competition") startRound();
   render();
 }
 
@@ -148,6 +156,11 @@ function startBatch(){
 }
 
 function render(){
+  if(state.mode === "challenge"){
+    renderChallenge();
+    return;
+  }
+
   if(state.roundIndex >= QUESTIONS.length){
     showResult();
     return;
@@ -161,6 +174,8 @@ function render(){
 
   state.selected = null;
   els.confirmBtn.disabled = true;
+  els.confirmBtn.classList.remove("hidden");
+  els.pauseBtn.classList.remove("hidden");
 
   const question = QUESTIONS[state.roundIndex];
   const activeTeam = currentTeam();
@@ -180,8 +195,37 @@ function render(){
   startTurnTimer();
 }
 
+function renderChallenge(){
+  const questions = activeQuestions();
+  if(state.challengeEndedEarly || state.roundIndex >= questions.length){
+    showResult();
+    return;
+  }
+
+  state.selected = null;
+  els.confirmBtn.disabled = true;
+  els.confirmBtn.classList.add("hidden");
+  els.pauseBtn.classList.add("hidden");
+  document.getElementById("randomBtn").classList.remove("hidden");
+
+  const question = questions[state.roundIndex];
+  const difficulty = currentChallengeDifficulty();
+  els.roundInfo.textContent = `第 ${state.roundIndex + 1} 题 / 共 ${questions.length} 题`;
+  els.turnInfo.textContent = `｜${difficulty.label}｜点击选项即结算`;
+  els.progressBar.style.width = `${progressPercent()}%`;
+  els.questionTitle.textContent = question.title;
+  els.questionText.textContent = question.text;
+  els.followTip.textContent = CHALLENGE_CONFIG.intro;
+  els.teamTitle.textContent = "当前闯关状态";
+
+  renderOptions();
+  renderTeams();
+  renderLog();
+  startTurnTimer();
+}
+
 function renderOptions(){
-  const question = QUESTIONS[state.roundIndex];
+  const question = activeQuestions()[state.roundIndex];
   els.options.innerHTML = "";
   question.options.forEach((option, index) => {
     const settledCount = settledPickCount(index);
@@ -189,6 +233,22 @@ function renderOptions(){
     const div = document.createElement("div");
     div.className = "option";
     div.addEventListener("click", () => selectOption(index, div));
+    if(state.mode === "challenge"){
+      const scoreDelta = scaledChallengeScore(option.score);
+      div.innerHTML = `
+        <div class="option-title">
+          <span>${option.name}</span>
+        </div>
+        <div class="option-desc">${option.desc}</div>
+        ${state.hideScoreHints ? "" : `
+          <div class="delta">
+            <span class="pill">${formatScore("影响", scoreDelta)}</span>
+          </div>
+        `}
+      `;
+      els.options.appendChild(div);
+      return;
+    }
     div.innerHTML = `
       <div class="option-title">
         <span>${option.name}</span>
@@ -208,7 +268,7 @@ function renderOptions(){
 
 function renderTeams(){
   els.teams.innerHTML = "";
-  const activeTeamIndex = currentTeamIndex();
+  const activeTeamIndex = state.mode === "challenge" ? 0 : currentTeamIndex();
   const batchSet = new Set(currentBatchTeamIndexes());
   state.teams.forEach((team, index) => {
     const div = document.createElement("div");
@@ -241,10 +301,20 @@ function selectOption(index, element){
   document.querySelectorAll(".option").forEach((option) => option.classList.remove("selected"));
   element.classList.add("selected");
   els.confirmBtn.disabled = false;
+  if(state.mode === "challenge"){
+    confirmChoice();
+  }
 }
 
 function autoChoice(){
-  state.selected = Math.floor(Math.random() * QUESTIONS[state.roundIndex].options.length);
+  chooseRandomOption();
+  if(state.mode === "challenge"){
+    confirmChoice();
+  }
+}
+
+function chooseRandomOption(){
+  state.selected = Math.floor(Math.random() * activeQuestions()[state.roundIndex].options.length);
   document.querySelectorAll(".option").forEach((option, index) => {
     option.classList.toggle("selected", index === state.selected);
   });
@@ -253,6 +323,10 @@ function autoChoice(){
 
 function confirmChoice(){
   if(state.selected === null) return;
+  if(state.mode === "challenge"){
+    confirmChallengeChoice();
+    return;
+  }
   clearTurnTimer();
 
   const activeTeamIndex = currentTeamIndex();
@@ -285,6 +359,49 @@ function confirmChoice(){
   render();
 }
 
+function confirmChallengeChoice(){
+  clearTurnTimer();
+
+  const team = state.teams[0];
+  const question = activeQuestions()[state.roundIndex];
+  const option = question.options[state.selected];
+  const finalScore = scaledChallengeScore(option.score);
+
+  applyScore(team, finalScore);
+  team.decisions.push({
+    round: state.roundIndex + 1,
+    optionIndex: state.selected,
+    option: option.name,
+    score: { ...option.score },
+    finalScore: { ...finalScore },
+    difficulty: state.difficulty
+  });
+
+  addLog(`${question.title}｜选择「${option.name}」，${formatScore("结算", finalScore)}。`);
+  if(maybeTriggerChallengeTrap(team, option)){
+    renderTeams();
+    renderLog();
+    return;
+  }
+
+  state.roundIndex += 1;
+  render();
+}
+
+function maybeTriggerChallengeTrap(team, option){
+  if(!option.trap) return false;
+  const trapRate = currentChallengeDifficulty().trapRate || 0;
+  if(Math.random() * 100 >= trapRate) return false;
+  const stat = option.trap.stat === "mood" ? "mood" : "stamina";
+  team[stat] = 0;
+  const statLabel = stat === "mood" ? "心情" : "体力";
+  state.challengeEndedEarly = true;
+  state.challengeEndReason = `${option.name}：${option.trap.reason}`;
+  addLog(`提前结算：${option.trap.reason}${statLabel}被清零。`);
+  showChallengeTrapModal(statLabel, option.trap.reason);
+  return true;
+}
+
 function setMode(mode){
   state.mode = mode;
   els.modeOptions.forEach((button) => {
@@ -292,11 +409,17 @@ function setMode(mode){
   });
   els.competitionPanel.classList.toggle("active", mode === "competition");
   els.challengePanel.classList.toggle("active", mode === "challenge");
+  renderSetupIntro();
+  renderDifficultyHint();
 }
 
 function renderDifficultyHint(){
-  const difficulty = GAME_CONFIG.difficulties[els.difficultySelect.value] || GAME_CONFIG.difficulties.normal;
+  const difficulty = CHALLENGE_CONFIG.difficulties[els.difficultySelect.value] || CHALLENGE_CONFIG.difficulties.normal;
   els.difficultyHint.textContent = `${difficulty.hint} 初始：体力 ${difficulty.initial.stamina} / 心情 ${difficulty.initial.mood} / GPA ${difficulty.initial.gpa}`;
+}
+
+function renderSetupIntro(){
+  els.setupIntro.textContent = state.mode === "challenge" ? CHALLENGE_CONFIG.intro : GAME_CONFIG.setupIntro;
 }
 
 function finishBatchIfNeeded(){
@@ -400,7 +523,7 @@ function settleCurrentBatch(){
 
 function maybeTriggerTrap(team, option){
   if(!option.trap || team.skip > 0) return;
-  const trapRate = GAME_CONFIG.probability.trapRate || 1;
+  const trapRate = option.trap.rate ?? GAME_CONFIG.probability.trapRate ?? 1;
   if(Math.random() * 100 >= trapRate) return;
   const stat = option.trap.stat === "mood" ? "mood" : "stamina";
   team[stat] = 0;
@@ -425,11 +548,17 @@ function updateRestStateForTeam(team){
 
 function showResult(){
   clearTurnTimer();
-  hideTrapModal();
+  els.trapModal.classList.add("hidden");
   els.game.classList.add("hidden");
   els.result.classList.remove("hidden");
   document.body.classList.remove("is-playing");
   document.body.classList.add("is-result");
+  els.scoreRule.textContent = scoreRuleText();
+  els.reflectionText.textContent = state.mode === "challenge" ? CHALLENGE_CONFIG.reflection : GAME_CONFIG.reflection;
+  if(state.mode === "challenge"){
+    showChallengeResult();
+    return;
+  }
   const ranked = [...state.teams].sort((a, b) => score(b) - score(a));
   const rows = ranked.map((team, index) => `
     <tr>
@@ -454,17 +583,57 @@ function showResult(){
   `;
 }
 
+function showChallengeResult(){
+  const team = state.teams[0];
+  const completed = team.decisions.length;
+  const total = activeQuestions().length;
+  const status = state.challengeEndedEarly ? "提前结算" : "完成闯关";
+  els.resultTable.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>状态</th><th>完成题数</th><th>体力</th><th>心情</th><th>GPA</th><th>总分</th><th>评价</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${status}</td>
+          <td>${completed} / ${total}</td>
+          <td>${team.stamina}</td>
+          <td>${team.mood}</td>
+          <td>${team.gpa}</td>
+          <td><b>${score(team).toFixed(1)}</b></td>
+          <td>${challengeComment(team, completed, total)}</td>
+        </tr>
+      </tbody>
+    </table>
+    ${state.challengeEndReason ? `<p class="small result-note">提前结算原因：${state.challengeEndReason}</p>` : ""}
+  `;
+}
+
 function showTrapModal(teamName, statLabel, reason){
   els.trapMessage.innerHTML = `
-    <p><b>${teamName}</b> 因为冒进策略触发突发状况。</p>
+    <p><b>${teamName}</b> 触发了选择风险。</p>
     <p>${reason}</p>
     <p>${statLabel}已清零，本组将被强制休息。</p>
   `;
   els.trapModal.classList.remove("hidden");
 }
 
+function showChallengeTrapModal(statLabel, reason){
+  els.trapMessage.innerHTML = `
+    <p><b>闯关提前结算</b></p>
+    <p>${reason}</p>
+    <p>${statLabel}已清零，本次期末线到这里提前收束。</p>
+  `;
+  els.trapModal.classList.remove("hidden");
+}
+
 function hideTrapModal(){
   els.trapModal.classList.add("hidden");
+  if(state.mode === "challenge" && state.challengeEndedEarly && !els.game.classList.contains("hidden")){
+    showResult();
+  }
 }
 
 function applyScore(team, delta){
@@ -475,16 +644,18 @@ function applyScore(team, delta){
 
 function startTurnTimer(){
   clearTurnTimer();
-  if(state.mode !== "competition"){
+  if(state.mode !== "competition" && state.mode !== "challenge"){
     els.countdownTrack.classList.add("hidden");
     els.timerLabel.textContent = "";
     els.pauseBtn.disabled = true;
     return;
   }
   els.countdownTrack.classList.remove("hidden");
-  els.pauseBtn.disabled = false;
+  els.pauseBtn.disabled = state.mode === "challenge";
   els.pauseBtn.textContent = "暂停";
-  state.timerDuration = state.roundDecisionCount === 0 ? FIRST_COMPETITION_TURN_MS : NEXT_COMPETITION_TURN_MS;
+  state.timerDuration = state.mode === "challenge"
+    ? CHALLENGE_CONFIG.timerMs
+    : (state.roundDecisionCount === 0 ? FIRST_COMPETITION_TURN_MS : NEXT_COMPETITION_TURN_MS);
   state.timerRemaining = state.timerDuration;
   state.timerEndsAt = Date.now() + state.timerDuration;
   state.timerPaused = false;
@@ -500,8 +671,8 @@ function updateTurnTimer(){
   els.timerLabel.textContent = `倒计时 ${formatTime(remaining)}`;
   if(remaining > 0) return;
   clearTurnTimer();
-  if(state.mode !== "competition" || state.roundIndex >= QUESTIONS.length) return;
-  if(state.selected === null) autoChoice();
+  if(!["competition", "challenge"].includes(state.mode) || state.roundIndex >= activeQuestions().length) return;
+  if(state.selected === null) chooseRandomOption();
   addLog(`${currentTeam().name} 倒计时结束，系统随机记录本组选择。`);
   confirmChoice();
 }
@@ -547,6 +718,7 @@ function currentTeamIndex(){
 }
 
 function currentTeam(){
+  if(state.mode === "challenge") return state.teams[0];
   return state.teams[currentTeamIndex()];
 }
 
@@ -672,19 +844,23 @@ function addScores(a, b){
 }
 
 function score(team){
-  const weights = GAME_CONFIG.scoreWeights;
+  const weights = state.mode === "challenge" ? CHALLENGE_CONFIG.scoreWeights : GAME_CONFIG.scoreWeights;
   return team.stamina * weights.stamina + team.mood * weights.mood + team.gpa * weights.gpa;
 }
 
 function scoreRuleText(){
-  const weights = GAME_CONFIG.scoreWeights;
+  const weights = state.mode === "challenge" ? CHALLENGE_CONFIG.scoreWeights : GAME_CONFIG.scoreWeights;
+  if(state.mode === "challenge"){
+    const difficulty = currentChallengeDifficulty();
+    return `总分 = 体力 x ${weights.stamina} + 心情 x ${weights.mood} + GPA x ${weights.gpa}。当前难度：${difficulty.label}，正向收益 x ${difficulty.scoreScale.positive}，负向代价 x ${difficulty.scoreScale.negative}。`;
+  }
   const probability = GAME_CONFIG.probability;
   return `总分 = 体力 x ${weights.stamina} + 心情 x ${weights.mood} + GPA x ${weights.gpa}。结算会按成功率随机判定；前面批次同选项越集中，后续成功率越低，最低 ${probability.minRate}%。未顺利执行时，会在原选项分值上追加轻微 debuff。`;
 }
 
 function currentInitialStats(){
   if(state.mode === "challenge"){
-    const difficulty = GAME_CONFIG.difficulties[els.difficultySelect.value] || GAME_CONFIG.difficulties.normal;
+    const difficulty = CHALLENGE_CONFIG.difficulties[els.difficultySelect.value] || CHALLENGE_CONFIG.difficulties.normal;
     return { ...difficulty.initial };
   }
   return {
@@ -692,6 +868,45 @@ function currentInitialStats(){
     mood: clampNumber(Number(els.initialMoodInput.value || GAME_CONFIG.initial.mood), MIN_STAT, MAX_STAT),
     gpa: clampNumber(Number(els.initialGpaInput.value || GAME_CONFIG.initial.gpa), MIN_STAT, MAX_STAT)
   };
+}
+
+function activeQuestions(){
+  return state.mode === "challenge" ? CHALLENGE_QUESTIONS : QUESTIONS;
+}
+
+function currentChallengeDifficulty(){
+  return CHALLENGE_CONFIG.difficulties[state.difficulty] || CHALLENGE_CONFIG.difficulties.normal;
+}
+
+function shouldHideScoreHints(){
+  if(state.mode === "challenge"){
+    return Boolean(currentChallengeDifficulty().hideScoreHints);
+  }
+  return Boolean(els.hideScoreHintsInput?.checked);
+}
+
+function scaledChallengeScore(scoreDelta){
+  const scale = currentChallengeDifficulty().scoreScale;
+  return {
+    stamina: scaleChallengeValue(scoreDelta.stamina || 0, scale),
+    mood: scaleChallengeValue(scoreDelta.mood || 0, scale),
+    gpa: scaleChallengeValue(scoreDelta.gpa || 0, scale)
+  };
+}
+
+function scaleChallengeValue(value, scale){
+  if(value > 0) return roundOneDecimal(value * scale.positive);
+  if(value < 0) return roundOneDecimal(value * scale.negative);
+  return 0;
+}
+
+function challengeComment(team, completed, total){
+  if(state.challengeEndedEarly) return "冒进路线触发提前结算，期末系统被迫停机";
+  if(completed >= total && team.stamina >= 8 && team.mood >= 8 && team.gpa >= 18) return "稳中有进，完整穿过期末周";
+  if(team.gpa >= 22 && (team.stamina <= 4 || team.mood <= 4)) return "成绩冲得很高，但资源几乎见底";
+  if(team.mood >= 14 && team.stamina >= 10) return "状态管理优秀，属于可持续通关";
+  if(completed >= total) return "顺利走完期末，过程有惊无险";
+  return "还有不少路没走完，但已经看见压力如何累积";
 }
 
 function comment(team){
@@ -750,6 +965,9 @@ function formatNumber(value){
 }
 
 function progressPercent(){
+  if(state.mode === "challenge"){
+    return (state.roundIndex / activeQuestions().length) * 100;
+  }
   const completedRounds = state.roundIndex * state.teams.length;
   const completedInRound = state.batchOrder
     .slice(0, state.batchCursor)

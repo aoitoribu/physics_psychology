@@ -463,6 +463,10 @@ tr:last-child td{border-bottom:0}
 
 .reflection{margin-top:16px}
 
+.result-note{
+  margin-top:12px;
+}
+
 .trap-modal{
   position:fixed;
   inset:0;

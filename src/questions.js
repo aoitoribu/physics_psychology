@@ -57,6 +57,7 @@ export const QUESTIONS = [
         score: { stamina: -4, mood: -2, gpa: 5 },
         successMod: -10,
         trap: {
+          rate: 2,
           stat: "stamina",
           reason: "通宵抢进度把身体电量直接榨干，眼前多背了几页，下一轮却只能被迫停机。"
         }
@@ -83,7 +84,12 @@ export const QUESTIONS = [
         name: "E. 先睡一觉再开工",
         desc: "承认大脑已经卡住，先恢复状态，明天用清醒时间补回来。",
         score: { stamina: 3, mood: 2, gpa: -1 },
-        successMod: 10
+        successMod: 10,
+        trap: {
+          rate: 1,
+          stat: "mood",
+          reason: "休息没有设置边界，醒来发现复习窗口被睡过去，心情被迟到感直接打穿。"
+        }
       }
     ]
   },
@@ -109,6 +115,7 @@ export const QUESTIONS = [
         score: { stamina: -4, mood: -3, gpa: 5 },
         successMod: -12,
         trap: {
+          rate: 2,
           stat: "mood",
           reason: "多线程硬扛触发了系统过载，任务还没排完，心态先被挤爆了。"
         }
@@ -123,7 +130,12 @@ export const QUESTIONS = [
         name: "E. 先暂停半小时重排优先级",
         desc: "不急着动手，先把任务按截止时间和收益重新排队。",
         score: { stamina: 1, mood: 2, gpa: 1 },
-        successMod: 8
+        successMod: 8,
+        trap: {
+          rate: 1,
+          stat: "mood",
+          reason: "优先级越排越细，行动迟迟没开始，温水式拖延把心态慢慢煮没了。"
+        }
       }
     ]
   },
@@ -155,6 +167,7 @@ export const QUESTIONS = [
         score: { stamina: -4, mood: -2, gpa: 4 },
         successMod: -8,
         trap: {
+          rate: 2,
           stat: "stamina",
           reason: "一个人接管全部内容导致体力瞬间透支，项目被推进了，人也被按下暂停键。"
         }
@@ -163,7 +176,12 @@ export const QUESTIONS = [
         name: "E. 先在群里阴阳怪气",
         desc: "短期很解气，但任务、关系和心态都可能一起变差。",
         score: { stamina: 0, mood: -1, gpa: -2 },
-        successMod: -5
+        successMod: -5,
+        trap: {
+          rate: 1,
+          stat: "mood",
+          reason: "阴阳怪气让群聊气氛彻底冷掉，后续沟通成本暴涨，心情被关系压力清空。"
+        }
       }
     ]
   },
@@ -182,6 +200,12 @@ export const QUESTIONS = [
         desc: "到点停止输入，给身体一个明确的恢复边界。",
         score: { stamina: 3, mood: 2, gpa: 1 },
         successMod: 10
+        ,
+        trap: {
+          rate: 1,
+          stat: "mood",
+          reason: "停工线设得太早，躺下后反复担心自己是不是没学够，心情被未完成感拖垮。"
+        }
       },
       {
         name: "C. 咖啡续命冲一波",
@@ -189,6 +213,7 @@ export const QUESTIONS = [
         score: { stamina: -3, mood: -1, gpa: 4 },
         successMod: -10,
         trap: {
+          rate: 2,
           stat: "stamina",
           reason: "咖啡续命没有续上，反而把最后一点体力刷空了。"
         }
@@ -221,7 +246,12 @@ export const QUESTIONS = [
         name: "B. 互相安慰十分钟",
         desc: "先稳住情绪，再决定下一步怎么补。",
         score: { stamina: 0, mood: 3, gpa: 1 },
-        successMod: 8
+        successMod: 8,
+        trap: {
+          rate: 1,
+          stat: "mood",
+          reason: "安慰变成了反复回放失败，全组越聊越丧，心情被二次打击清空。"
+        }
       },
       {
         name: "C. 质疑人生并停止复习",
@@ -241,6 +271,7 @@ export const QUESTIONS = [
         score: { stamina: -1, mood: 0, gpa: 5 },
         successMod: -15,
         trap: {
+          rate: 2,
           stat: "mood",
           reason: "押题路线突然塌方，越想越慌，心情值被不确定性直接清空。"
         }
@@ -257,6 +288,7 @@ export const QUESTIONS = [
         score: { stamina: -5, mood: -3, gpa: 6 },
         successMod: -15,
         trap: {
+          rate: 2,
           stat: "stamina",
           reason: "最后 24 小时通宵拉满，身体系统直接亮红灯，只能强制休息。"
         }
@@ -277,7 +309,12 @@ export const QUESTIONS = [
         name: "D. 整理考场物品和错题卡",
         desc: "减少临场混乱，保住能拿到的分。",
         score: { stamina: 1, mood: 3, gpa: 2 },
-        successMod: 10
+        successMod: 10,
+        trap: {
+          rate: 1,
+          stat: "mood",
+          reason: "整理物品变成反复检查，越确认越不放心，考前心态被细节焦虑清空。"
+        }
       },
       {
         name: "E. 刷十套题临时抱佛脚",
