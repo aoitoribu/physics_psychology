@@ -1,5 +1,6 @@
 import { GAME_CONFIG, QUESTIONS } from "./questions.js";
 import { CHALLENGE_CONFIG, CHALLENGE_QUESTIONS } from "./challengeQuestions.js";
+import { MUSIC_PLAYER_CONFIG } from "./musicConfig.js";
 
 const MAX_STAT = 30;
 const MIN_STAT = -20;
@@ -85,12 +86,100 @@ els.modeOptions.forEach((button) => {
 els.difficultySelect.addEventListener("change", renderDifficultyHint);
 
 initStaticText();
+initMusicPlayer();
 
 function initStaticText(){
   renderSetupIntro();
   els.scoreRule.textContent = scoreRuleText();
   els.reflectionText.textContent = GAME_CONFIG.reflection;
   renderDifficultyHint();
+}
+
+function initMusicPlayer(){
+  const widget = document.getElementById("musicWidget");
+  const toggle = document.getElementById("musicToggle");
+  const frameSlot = document.getElementById("musicFrameSlot");
+  const status = document.getElementById("musicStatus");
+  const providerLabel = document.getElementById("musicProviderLabel");
+  if(!widget || !toggle || !frameSlot || !status || !providerLabel) return;
+
+  if(!MUSIC_PLAYER_CONFIG.enabled){
+    widget.classList.add("hidden");
+    return;
+  }
+
+  const embedUrl = buildMusicEmbedUrl(MUSIC_PLAYER_CONFIG);
+  widget.classList.toggle("music-playlist", String(MUSIC_PLAYER_CONFIG.itemType || "").toLowerCase() === "playlist");
+  providerLabel.textContent = musicProviderText(MUSIC_PLAYER_CONFIG);
+  status.textContent = embedUrl
+    ? "播放器已就绪，页面刷新前会持续保留。"
+    : "未配置音乐：请在 src/musicConfig.js 填写来源和 ID。";
+
+  if(embedUrl){
+    const iframe = document.createElement("iframe");
+    iframe.title = "音乐播放器";
+    iframe.src = embedUrl;
+    iframe.loading = "eager";
+    iframe.allow = "autoplay; encrypted-media";
+    iframe.referrerPolicy = "no-referrer-when-downgrade";
+    frameSlot.appendChild(iframe);
+  }
+
+  toggle.addEventListener("click", () => {
+    const opened = widget.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(opened));
+  });
+}
+
+function buildMusicEmbedUrl(config){
+  const customUrl = safeMusicUrl(config.customEmbedUrl);
+  if(customUrl) return customUrl;
+
+  const provider = String(config.provider || "").toLowerCase();
+  const itemType = String(config.itemType || "song").toLowerCase();
+  const id = String(config.id || "").trim();
+  if(!id) return "";
+
+  const encodedId = encodeURIComponent(id);
+  const auto = config.autoplay ? "1" : "0";
+  if(provider === "netease"){
+    const type = itemType === "playlist" ? "0" : "2";
+    const height = itemType === "playlist" ? "430" : "66";
+    return `https://music.163.com/outchain/player?type=${type}&id=${encodedId}&auto=${auto}&height=${height}`;
+  }
+
+  if(provider === "qq" && itemType === "song"){
+    return `https://i.y.qq.com/n2/m/outchain/player/index.html?songid=${encodedId}&songtype=0`;
+  }
+
+  return "";
+}
+
+function safeMusicUrl(value){
+  const url = String(value || "").trim();
+  if(!url) return "";
+  try{
+    const parsed = new URL(url);
+    if(["https:", "http:"].includes(parsed.protocol)) return parsed.href;
+  }catch(error){
+    return "";
+  }
+  return "";
+}
+
+function musicProviderText(config){
+  const providerNames = {
+    netease: "网易云音乐",
+    qq: "QQ 音乐",
+    kugou: "酷狗音乐"
+  };
+  const typeNames = {
+    song: "单曲",
+    playlist: "歌单"
+  };
+  const provider = providerNames[String(config.provider || "").toLowerCase()] || "自定义音乐";
+  const type = typeNames[String(config.itemType || "").toLowerCase()] || "播放器";
+  return `${provider} / ${type}`;
 }
 
 function initGame(){

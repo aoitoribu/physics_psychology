@@ -111,6 +111,20 @@
     </section>
   </main>
 
+  <aside id="musicWidget" class="music-widget" aria-label="音乐播放器">
+    <button id="musicToggle" class="music-toggle" type="button" aria-expanded="false" aria-controls="musicPanel" title="音乐播放器">
+      <span aria-hidden="true">♪</span>
+    </button>
+    <div id="musicPanel" class="music-panel">
+      <div class="music-panel-head">
+        <b id="musicProviderLabel">音乐播放器</b>
+        <span>页面内持续播放</span>
+      </div>
+      <p id="musicStatus" class="music-status">播放器加载中...</p>
+      <div id="musicFrameSlot" class="music-frame-slot"></div>
+    </div>
+  </aside>
+
   <div id="trapModal" class="trap-modal hidden" role="dialog" aria-modal="true" aria-labelledby="trapTitle">
     <div class="trap-dialog">
       <div class="trap-kicker">突发状况</div>
